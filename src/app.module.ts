@@ -24,6 +24,9 @@ import { SearchController } from './search/search.controller';
 import { SearchModule } from './search/search.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PublicModule } from './public/public.module';
+import { ContactController } from './contact/contact.controller';
+import { ContactModule } from './contact/contact.module';
+import { DiscountModule } from './discount/discount.module';
 
 @Module({
   imports: [
@@ -47,6 +50,7 @@ import { PublicModule } from './public/public.module';
     }),
     AuthModule,
     UserModule,
+    DiscountModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -62,8 +66,9 @@ import { PublicModule } from './public/public.module';
     SearchModule,
     DashboardModule,
     PublicModule,
+    ContactModule,
   ],
-  controllers: [AppController, ProductController, UserController],
+  controllers: [AppController, ProductController, UserController, ContactController],
   providers: [AppService, ProductService, UserController],
 })
 export class AppModule {}

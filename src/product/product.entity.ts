@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
-import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn} from 'typeorm'
+import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany} from 'typeorm'
+import { ProductDiscount } from '../discount/product-discount.entity'
 
 @Entity('products')
 export class Product {
@@ -30,9 +31,15 @@ export class Product {
   @Column({default: false})
   suggestion: boolean
 
-  @CreateDateColumn({name: 'created_at'})
+  @OneToMany(() => ProductDiscount, (productDiscount) => productDiscount.product)
+  productDiscounts: ProductDiscount[]
+
+  @CreateDateColumn({name: 'created_at', default: null})
   createdAt: Date
 
-  @UpdateDateColumn({name: 'updated_at'})
+  @UpdateDateColumn({name: 'updated_at', default: null})
   updatedAt: Date
+
+  @Column({ type: 'json', nullable: true })
+  classifications?: { label: string; imageUrl: string }[]
 }

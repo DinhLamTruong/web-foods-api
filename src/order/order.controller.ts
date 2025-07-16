@@ -8,6 +8,7 @@ export class OrderController {
 
   @Post()
   async createOrder(@Body() data: any): Promise<Order> {
+    console.log('Received order data:', JSON.stringify(data, null, 2));
     const { customerInfo, items } = data;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -45,17 +46,32 @@ export class OrderController {
       ? (customerInfo.ward as { label: string }).label
       : customerInfo.ward;
 
+    const shippingMethod = customerInfo.shippingMethod || '';
+
+    // Accept discountCodes as array or comma-separated string
+    let discountCodes: string[] = [];
+    if (Array.isArray(customerInfo.discountCodes)) {
+      discountCodes = customerInfo.discountCodes;
+    } else if (typeof customerInfo.discountCodes === 'string' && customerInfo.discountCodes.trim() !== '') {
+      discountCodes = customerInfo.discountCodes.split(',').map(code => code.trim());
+    } else if (customerInfo.discountCode && customerInfo.discountCode.trim() !== '') {
+      discountCodes = [customerInfo.discountCode.trim()];
+    }
+
     const orderData: Partial<Order> = {
       ...customerInfo,
       district,
       province,
       ward,
+      shippingMethod,
+      discountCode: discountCodes.join(','), // store as comma-separated string
       items: mappedItems,
     };
 
     try {
       return await this.orderService.createOrder(orderData);
     } catch (error) {
+      console.error('Error in createOrder:', error);
       if (error instanceof Error && error.message.includes('Insufficient quantity')) {
         throw new BadRequestException(error.message);
       }
@@ -81,6 +97,11 @@ export class OrderController {
   @Get()
   async getOrders(): Promise<Order[]> {
     return this.orderService.getOrders();
+  }
+
+  @Get('user')
+  async getOrdersByUserEmail(@Query('email') email: string): Promise<Order[]> {
+    return this.orderService.getOrdersByEmail(email);
   }
 
   @Get('status/:status')

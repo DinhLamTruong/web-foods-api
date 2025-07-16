@@ -21,8 +21,8 @@ export class Order {
   @Column({ default: false })
   agreeTerms: boolean;
 
-  @Column({ nullable: true })
-  discountCode: string;
+  @Column({ nullable: true, type: 'text' })
+  discountCode: string; // will store multiple discount codes as comma-separated string
 
   @Column({ default: '' })
   district: string;

@@ -1,19 +1,13 @@
-import { Controller, Get } from '@nestjs/common';
-import { DashboardService } from '../dashboard/dashboard.service';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { DiscountService } from '../discount/discount.service';
 
-@Controller('public')
-export class PublicController {
-  constructor(private readonly dashboardService: DashboardService) {}
+@Controller('discounts')
+export class PublicDiscountController {
+  constructor(private readonly discountService: DiscountService) {}
 
-  @Get('product-count')
-  async getTotalProductTypes() {
-    const count = await this.dashboardService.getTotalProductTypes();
-    return { totalProductTypes: count };
-  }
-
-  @Get('total-revenue')
-  async getTotalRevenue() {
-    const totalRevenue = await this.dashboardService.getTotalRevenue();
-    return { totalRevenue };
+  @Get('product/:productId')
+  async getDiscountsByProduct(@Param('productId', ParseIntPipe) productId: number) {
+    // Implement method in DiscountService to get discounts by product
+    return this.discountService.findDiscountsByProduct(productId);
   }
 }

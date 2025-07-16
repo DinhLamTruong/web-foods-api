@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { PublicController } from './public.controller';
+import { PublicDiscountController } from './public.controller';
 import { DashboardModule } from '../dashboard/dashboard.module';
+import { DiscountModule } from '../discount/discount.module';
 
 @Module({
-  imports: [DashboardModule],
-  controllers: [PublicController],
+  imports: [DashboardModule, DiscountModule],
+  controllers: [PublicDiscountController],
 })
 export class PublicModule {}

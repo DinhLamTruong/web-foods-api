@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order, OrderItem } from './order.entity';
 import { Product } from '../product/product.entity';
+import { DiscountService } from '../discount/discount.service';
+import { DiscountType } from '../discount/discount.entity';
 
 @Injectable()
 export class OrderService {
@@ -15,7 +17,68 @@ export class OrderService {
 
     @InjectRepository(OrderItem)
     private orderItemRepository: Repository<OrderItem>,
+
+    private discountService: DiscountService,
   ) {}
+
+  async calculateTotalPrice(
+    transactionalEntityManager: any,
+    items: any[],
+    shippingMethod: string,
+    discountCodes?: string[],
+  ): Promise<number> {
+    let subtotal = 0;
+
+    if (items && items.length > 0) {
+      for (const item of items) {
+        if (!item.productId) {
+          throw new Error('ProductId is missing in one of the order items');
+        }
+        const product = await transactionalEntityManager.findOne(Product, {
+          where: { id: item.productId },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!product) {
+          throw new Error(`Product with id ${item.productId} not found`);
+        }
+        subtotal += Number(product.price) * item.quantity;
+      }
+    }
+
+    let shippingFee = shippingMethod === 'delivery' ? 40000 : 0;
+
+    let discountedSubtotal = subtotal;
+    let freeShippingApplied = false;
+
+    if (discountCodes && discountCodes.length > 0) {
+      for (const code of discountCodes) {
+        const discount = await this.discountService.findOneByCode(code);
+        if (!discount) {
+          continue;
+        }
+        if (discount.discount_type === DiscountType.FREE_SHIPPING) {
+          freeShippingApplied = true;
+        } else if (discount.discount_type === DiscountType.PERCENT && discount.discount_value) {
+          // Apply discount on subtotal only
+          discountedSubtotal = discountedSubtotal - (subtotal * Number(discount.discount_value)) / 100;
+        } else if (discount.discount_type === DiscountType.FIXED && discount.discount_value) {
+          discountedSubtotal = discountedSubtotal - Number(discount.discount_value);
+        }
+      }
+    }
+
+    if (freeShippingApplied) {
+      shippingFee = 0;
+    }
+
+    let total = discountedSubtotal + shippingFee;
+
+    if (total < 0) {
+      total = 0;
+    }
+
+    return total;
+  }
 
   async createOrder(data: Partial<Order>): Promise<Order> {
     return await this.orderRepository.manager.transaction(async (transactionalEntityManager) => {
@@ -46,12 +109,19 @@ export class OrderService {
         }
       }
 
-      // Add shipping fee based on shippingMethod
-      if (data.shippingMethod === 'delivery') {
-        totalPrice += 40000;
-      } else {
-        totalPrice += 0;
+      // Parse discount codes from comma-separated string to array
+      let discountCodes: string[] = [];
+      if (data.discountCode && data.discountCode.trim() !== '') {
+        discountCodes = data.discountCode.split(',').map(code => code.trim());
       }
+
+      // Calculate total price using the new method
+      totalPrice = await this.calculateTotalPrice(
+        transactionalEntityManager,
+        data.items ?? [],
+        data.shippingMethod || '',
+        discountCodes,
+      );
 
       data.totalPrice = totalPrice;
 
@@ -80,8 +150,63 @@ export class OrderService {
   }
 
   async updateOrder(id: number, data: Partial<Order>): Promise<Order | null> {
-    await this.orderRepository.update(id, data);
-    return this.orderRepository.findOneBy({ id });
+    return await this.orderRepository.manager.transaction(async (transactionalEntityManager) => {
+      // Fetch existing order
+      const existingOrder = await transactionalEntityManager.findOne(Order, { where: { id }, relations: ['items'] });
+      if (!existingOrder) {
+        throw new Error(`Order with id ${id} not found`);
+      }
+
+      // Merge updated data
+      const updatedOrder = { ...existingOrder, ...data };
+
+      // Recalculate totalPrice if discountCode, items, or shippingMethod changed
+      const discountCodeChanged = data.discountCode !== undefined && data.discountCode !== existingOrder.discountCode;
+      const itemsChanged = data.items !== undefined;
+      const shippingMethodChanged = data.shippingMethod !== undefined && data.shippingMethod !== existingOrder.shippingMethod;
+
+      // Parse discount codes from comma-separated string to array
+      let discountCodes: string[] = [];
+      if (updatedOrder.discountCode && updatedOrder.discountCode.trim() !== '') {
+        discountCodes = updatedOrder.discountCode.split(',').map(code => code.trim());
+      }
+
+      if (discountCodeChanged || itemsChanged || shippingMethodChanged) {
+        const itemsToCalculate = data.items ?? existingOrder.items;
+        const totalPrice = await this.calculateTotalPrice(
+          transactionalEntityManager,
+          itemsToCalculate,
+          updatedOrder.shippingMethod || '',
+          discountCodes,
+        );
+        updatedOrder.totalPrice = totalPrice;
+      }
+
+      // Update order entity
+      await transactionalEntityManager.update(Order, id, updatedOrder);
+
+      // If items updated, update order items
+      if (itemsChanged) {
+        // Remove existing items
+        if (existingOrder.items && existingOrder.items.length > 0) {
+          await transactionalEntityManager.remove(existingOrder.items);
+        }
+        // Add new items
+        if (data.items && data.items.length > 0) {
+          const orderItems: OrderItem[] = [];
+          for (const item of data.items) {
+            const orderItem = this.orderItemRepository.create({
+              ...item,
+              order: updatedOrder,
+            });
+            orderItems.push(orderItem);
+          }
+          await transactionalEntityManager.save(orderItems);
+        }
+      }
+
+      return transactionalEntityManager.findOne(Order, { where: { id }, relations: ['items'] });
+    });
   }
 
   async getOrders(): Promise<Order[]> {
@@ -93,6 +218,20 @@ export class OrderService {
         'user',
         'user.email = order.email'
       )
+      .orderBy('order.createdAt', 'DESC')
+      .getMany();
+  }
+
+  async getOrdersByEmail(email: string): Promise<Order[]> {
+    return this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndMapOne(
+        'order.user',
+        'users',
+        'user',
+        'user.email = order.email'
+      )
+      .where('order.email = :email', { email })
       .orderBy('order.createdAt', 'DESC')
       .getMany();
   }

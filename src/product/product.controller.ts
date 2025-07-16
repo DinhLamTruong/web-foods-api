@@ -30,6 +30,12 @@ export class ProductController {
     return this.productService.findAll()
   }
 
+  @Get('with-active-discounts')
+  async findAllWithActiveDiscounts() {
+    this.logger.log('GET /product/with-active-discounts called')
+    return this.productService.findAllWithActiveDiscounts()
+  }
+
   @Post()
   async handlePost(@Query('type') type: string, @Body() body: any, @Query('id') id?: string) {
     let parsedId: number | null = null
@@ -43,6 +49,7 @@ export class ProductController {
     this.logger.log(`POST /product body: ${JSON.stringify(body)}`)
     try {
       if (type === 'add') {
+        // discountIds can be passed in body as array of numbers
         const created = await this.productService.create(body)
         this.logger.log(`Product created with id=${created.id}`)
         return created
@@ -50,6 +57,7 @@ export class ProductController {
         if (!parsedId) {
           throw new BadRequestException('Product id must be provided for edit')
         }
+        // discountIds can be passed in body as array of numbers
         const updated = await this.productService.update(parsedId, body)
         this.logger.log(`Product updated with id=${parsedId}`)
         return updated
@@ -79,6 +87,31 @@ export class ProductController {
     }
     const host = `${req.protocol}://${req.get('host')}`
     const updatedProduct = await this.productService.uploadProductImage(productId, file, host)
+    return updatedProduct
+  }
+
+  @Post('upload-classification-image')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadClassificationImage(
+    @Query('id') id: string,
+    @Query('index') index: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req
+  ) {
+    const productId = parseInt(id, 10)
+    const classificationIndex = parseInt(index, 10)
+    if (isNaN(productId)) {
+      throw new BadRequestException('Product id must be a number')
+    }
+    if (isNaN(classificationIndex)) {
+      throw new BadRequestException('Classification index must be a number')
+    }
+    this.logger.log(`POST /product/upload-classification-image called with id=${id} index=${index}`)
+    if (!file) {
+      throw new BadRequestException('File is required')
+    }
+    const host = `${req.protocol}://${req.get('host')}`
+    const updatedProduct = await this.productService.uploadClassificationImage(productId, classificationIndex, file, host)
     return updatedProduct
   }
 
