@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Patch, Body, Param, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Order } from './order.entity';
 
@@ -127,5 +127,14 @@ export class OrderController {
   @Get(':id')
   async getOrderById(@Param('id') id: string): Promise<Order | null> {
     return this.orderService.getOrderById(Number(id));
+  }
+
+  @Delete(':id')
+  async deleteOrder(@Param('id') id: string): Promise<{ message: string }> {
+    const success = await this.orderService.deleteOrder(Number(id));
+    if (!success) {
+      throw new BadRequestException(`Order with id ${id} not found`);
+    }
+    return { message: 'Order deleted successfully' };
   }
 }

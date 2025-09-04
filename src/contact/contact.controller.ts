@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param } from '@nestjs/common';
 import { ContactService } from './contact.service';
 import { Contact } from './contact.entity';
 
@@ -18,5 +18,10 @@ export class ContactController {
   @Get()
   async findAll(): Promise<Contact[]> {
     return this.contactService.findAll();
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string): Promise<void> {
+    return this.contactService.delete(+id);
   }
 }

@@ -273,4 +273,41 @@ export class OrderService {
       relations: ['items'], // assuming 'items' is the relation name for order products
     });
   }
+
+  async deleteOrder(id: number): Promise<boolean> {
+    return await this.orderRepository.manager.transaction(async (transactionalEntityManager) => {
+      // Fetch the order with items
+      const order = await transactionalEntityManager.findOne(Order, {
+        where: { id },
+        relations: ['items'],
+      });
+      if (!order) {
+        return false;
+      }
+
+      // Restore product quantities
+      if (order.items && order.items.length > 0) {
+        for (const item of order.items) {
+          const product = await transactionalEntityManager.findOne(Product, {
+            where: { id: item.productId },
+            lock: { mode: 'pessimistic_write' },
+          });
+          if (product) {
+            product.quantity += item.quantity;
+            await transactionalEntityManager.save(product);
+          }
+        }
+      }
+
+      // Delete order items first
+      if (order.items && order.items.length > 0) {
+        await transactionalEntityManager.remove(order.items);
+      }
+
+      // Delete the order
+      await transactionalEntityManager.remove(order);
+
+      return true;
+    });
+  }
 }
