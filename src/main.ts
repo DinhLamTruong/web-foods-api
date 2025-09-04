@@ -1,6 +1,6 @@
-import {NestFactory} from '@nestjs/core'
-import {AppModule} from './app.module'
-import {ConfigService} from '@nestjs/config'
+import { NestFactory } from '@nestjs/core'
+import { AppModule } from './app.module'
+import { ConfigService } from '@nestjs/config'
 import * as bodyParser from 'body-parser'
 
 async function bootstrap() {
@@ -17,8 +17,9 @@ async function bootstrap() {
     'http://localhost:5174',
     'http://localhost:5173',
     'http://192.168.1.46:5173',
+    'http://192.168.41.160:8080',
   ].filter((origin) => !!origin)
-  
+
   // Enable CORS with custom configuration
   app.enableCors({
     origin: true, // Allow all origins for development/testing

@@ -1,9 +1,24 @@
-import {Controller, Post, Body, UseGuards, Request, Get, HttpCode, HttpStatus, UseInterceptors, UploadedFile, BadRequestException, Delete, Param, ForbiddenException} from '@nestjs/common'
-import {AuthService} from 'src/auth/auth.service'
-import {JwtAuthGuard} from 'src/auth/jwt-auth.guard'
-import {User} from './user.entity'
-import {UserService} from './user.service'
-import {FileInterceptor} from '@nestjs/platform-express'
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Get,
+  HttpCode,
+  HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  Delete,
+  Param,
+  ForbiddenException,
+} from '@nestjs/common'
+import { AuthService } from 'src/auth/auth.service'
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard'
+import { User } from './user.entity'
+import { UserService } from './user.service'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { RoleGuard } from 'src/auth/role.guard'
 import { SetMetadata } from '@nestjs/common'
 
@@ -18,7 +33,7 @@ export class UserController {
   @Get()
   async findAll() {
     const users = await this.userService.findAll()
-    return users.map(user => ({
+    return users.map((user) => ({
       userId: user.id,
       email: user.email,
       name: user.email,
@@ -42,10 +57,10 @@ export class UserController {
   async login(@Body() user: User) {
     const validatedUser = await this.authService.validateUser(user.email, user.password)
     if (!validatedUser) {
-      return {message: 'Invalid credentials'}
+      return { message: 'Invalid credentials' }
     }
     if (validatedUser.role !== 'admin') {
-      return {message: 'Access denied: insufficient permissions'}
+      return { message: 'Access denied: insufficient permissions' }
     }
     return this.authService.login(validatedUser)
   }
@@ -54,11 +69,11 @@ export class UserController {
   @Post('change-password')
   async changePassword(
     @Request() req,
-    @Body() body: {currentPassword: string; newPassword: string}
+    @Body() body: { currentPassword: string; newPassword: string }
   ) {
     const userId = req.user.userId
     await this.authService.changePassword(userId, body.currentPassword, body.newPassword)
-    return {message: 'Password changed successfully'}
+    return { message: 'Password changed successfully' }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -70,10 +85,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadAvatar(
-    @Request() req,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
+  async uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
     const userId = req.user.userId
     if (!file) {
       throw new BadRequestException('File is required')
@@ -82,23 +94,15 @@ export class UserController {
     return updatedUser
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Delete()
-  async deleteUser(@Request() req) {
-    const userId = req.user.userId
-    await this.userService.deleteUser(userId)
-    return { message: 'User account deleted successfully' }
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Delete()
-  @UseGuards(RoleGuard)
-  @SetMetadata('roles', ['admin'])
-  async deleteUserById(@Request() req, @Body('id') id: number) {
-    if (id === req.user.userId) {
-      throw new ForbiddenException('Cannot delete the currently logged-in user');
+  @Delete(':id')
+  async deleteUserById(@Request() req, @Param('id') id: number) {
+    try {
+      await this.userService.deleteUser(id)
+      console.log('User deleted successfully for ID:', id)
+      return { message: 'User deleted successfully' }
+    } catch (error) {
+      console.error('Error deleting user with ID:', id, 'Error:', error.message)
+      throw error
     }
-    await this.userService.deleteUser(id);
-    return { message: 'User deleted successfully' };
   }
 }
