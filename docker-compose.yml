@@ -28,7 +28,7 @@ services:
       - /home/sukimoko/api/.env:/usr/src/app/.env
       - /home/sukimoko/api/uploads:/usr/src/app/uploads
     ports:
-      - "8081:3001"
+      - "8085:3001"
     depends_on:
       - sukimoko_db
     networks:
