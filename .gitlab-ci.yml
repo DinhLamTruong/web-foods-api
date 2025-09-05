@@ -14,14 +14,10 @@ build-development:
     DOCKER_CI_JOB_TOKEN: $CI_JOB_TOKEN
     DOCKER_CONTAINER_PORT_EXPOSE: 8081
     DOCKER_CONTAINER_PORT_LISTEN: 3001
-
-  before_script:
-    - cat /home/gitlab-runner/.password.txt | docker login --username longtb --password-stdin
   
   script:
     - chmod u+x ./deploy/dev/build.sh
     - ./deploy/dev/build.sh
-    - docker push longtb/sukimoko-api-dev
     - chmod u+x ./deploy/dev/run.sh
     - ./deploy/dev/run.sh
 
@@ -40,14 +36,10 @@ build-production:
     DOCKER_CI_JOB_TOKEN: $CI_JOB_TOKEN
     DOCKER_CONTAINER_PORT_EXPOSE: 8081
     DOCKER_CONTAINER_PORT_LISTEN: 3001
-
-  before_script:
-    - cat /home/gitlab-runner/.password.txt | docker login --username longtb --password-stdin
   
   script:
     - chmod u+x ./deploy/prod/build.sh
     - ./deploy/prod/build.sh
-    - docker push longtb/sukimoko-api-dev
     - chmod u+x ./deploy/prod/run.sh
     - ./deploy/prod/run.sh
 
