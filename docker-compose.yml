@@ -10,7 +10,7 @@ services:
       MYSQL_PASSWORD: sukimoko123
       MYSQL_DATABASE: sukimoko
     volumes:
-      - /home/centos/api-swarm/database:/var/lib/mysql
+      - /home/sukimoko/database:/var/lib/mysql
     networks:
       - sukinet2
 
@@ -25,8 +25,8 @@ services:
       - DB_PASSWORD=sukimoko123
       - DB_DATABASE=sukimoko
     volumes:
-      - /home/centos/api-swarm/env/.env:/usr/src/app/.env
-      - /home/centos/api-swarm/uploads:/usr/src/app/uploads
+      - /home/sukimoko/api/.env:/usr/src/app/.env
+      - /home/sukimoko/api/uploads:/usr/src/app/uploads
     ports:
       - "8081:3001"
     depends_on:
