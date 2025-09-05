@@ -1,0 +1,39 @@
+services:
+  sukimoko_db:
+    image: mysql:8.0
+    restart: always
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: Abc@1234
+      MYSQL_USER: sukimoko
+      MYSQL_PASSWORD: sukimoko123
+      MYSQL_DATABASE: sukimoko
+    volumes:
+      - /home/centos/api-swarm/database:/var/lib/mysql
+    networks:
+      - sukinet2
+
+  sukimoko_api:
+    image: api-sukimoko:250903
+    restart: always
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=sukimoko_db
+      - DB_PORT=3306
+      - DB_USER=sukimoko
+      - DB_PASSWORD=sukimoko123
+      - DB_DATABASE=sukimoko
+    volumes:
+      - /home/centos/api-swarm/env/.env:/usr/src/app/.env
+      - /home/centos/api-swarm/uploads:/usr/src/app/uploads
+    ports:
+      - "8081:3001"
+    depends_on:
+      - sukimoko_db
+    networks:
+      - sukinet2
+
+networks:
+  sukinet2:
+    driver: overlay
