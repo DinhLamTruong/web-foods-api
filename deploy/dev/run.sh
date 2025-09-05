@@ -10,5 +10,5 @@ if [ -n "$OLD_CONTAINER" ]; then
     fi
 fi
 
-docker stack deploy --compose-file docker-compse.yml --with-registry-auth sukimoko-api-dev
+docker stack deploy --compose-file docker-compose.yml --with-registry-auth sukimoko-api-dev
 echo "Deploying new container: ${DOCKER_CONTAINER_NAME}"
