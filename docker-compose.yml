@@ -15,7 +15,7 @@ services:
       - sukinet2
 
   sukimoko_api:
-    image: api-sukimoko:250903
+    image: '${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}'
     restart: always
     environment:
       - NODE_ENV=development
