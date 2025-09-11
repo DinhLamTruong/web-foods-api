@@ -103,24 +103,11 @@ export class ProductService {
     const product = await this.findOne(id);
     Object.assign(product, updateProduct);
 
-    // Merge existing classifications with new ones, preserving old imageUrls if not replaced
-    const mergedClassifications = [...(product.classifications || [])];
-
-    newClassifications.forEach((newClass, idx) => {
-      if (mergedClassifications[idx]) {
-        mergedClassifications[idx].label = newClass.label;
-        // Only replace imageUrl if new one is provided (non-empty)
-        if (newClass.imageUrl && newClass.imageUrl !== '') {
-          mergedClassifications[idx].imageUrl = newClass.imageUrl;
-        }
-      } else {
-        mergedClassifications.push(newClass);
-      }
-    });
-
-    product.classifications = mergedClassifications;
+    // Replace classifications fully with new classifications
+    product.classifications = newClassifications;
 
     const savedProduct = await this.productRepository.save(product);
+    console.log('Saved product classifications:', savedProduct.classifications);
 
     // Remove existing productDiscounts
     await this.productDiscountRepository
