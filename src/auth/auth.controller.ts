@@ -9,9 +9,9 @@ import {
   Req,
   Patch,
 } from '@nestjs/common'
-import {AuthService} from '@auth/auth.service'
-import {JwtAuthGuard} from '@auth/jwt-auth.guard'
-import {AuthGuard} from '@nestjs/passport'
+import { AuthService } from '@auth/auth.service'
+import { JwtAuthGuard } from '@auth/jwt-auth.guard'
+import { AuthGuard } from '@nestjs/passport'
 
 @Controller('auth')
 export class AuthController {
@@ -19,7 +19,7 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() body) {
-    const {email, password} = body
+    const { email, password } = body
     const user = await this.authService.validateUser(email, password)
     if (!user) {
       throw new UnauthorizedException('Invalid credentials')
@@ -30,7 +30,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(@Body() body) {
-    const {userId} = body
+    const { userId } = body
     return this.authService.logout(userId)
   }
 
@@ -42,22 +42,22 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() body) {
-    const {username, password, email, imageUrl} = body
+    const { username, password, email, imageUrl } = body
     await this.authService.register(username, password, email || '', imageUrl || '')
   }
 
   @Post('refresh')
   async refresh(@Body() body) {
-    const {refreshToken} = body
+    const { refreshToken } = body
     return this.authService.refresh(refreshToken)
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('change-password')
   async changePassword(@Body() body, @Req() req) {
-    const {currentPassword, newPassword} = body
+    const { currentPassword, newPassword } = body
     const userId = req.user.userId // Get the user ID from the request
     await this.authService.changePassword(userId, currentPassword, newPassword)
-    return {message: 'Password updated successfully'}
+    return { message: 'Password updated successfully' }
   }
 }
