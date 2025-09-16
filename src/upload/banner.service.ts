@@ -19,6 +19,14 @@ export class BannerService {
         throw new InternalServerErrorException('File too large');
       }
       await fs.mkdir(this.bannerDir, { recursive: true });
+
+      // Delete existing banner images to overwrite
+      const existingFiles = await fs.readdir(this.bannerDir);
+      for (const existingFile of existingFiles) {
+        const existingFilePath = path.join(this.bannerDir, existingFile);
+        await fs.unlink(existingFilePath);
+      }
+
       const ext = path.extname(file.originalname);
       const baseName = path.basename(file.originalname, ext);
       const uniqueName = `${baseName}_${Date.now()}${ext}`;
