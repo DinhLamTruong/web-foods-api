@@ -39,7 +39,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        avaratar: user.imageUrl,
+        avatar: user.imageUrl,
         name: user.username,
         role: user.role,
       },

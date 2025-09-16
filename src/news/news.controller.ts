@@ -39,8 +39,8 @@ export class NewsController {
     @Body() newsData: Partial<News>,
   ): Promise<News> {
     if (image) {
-      const imagePath = this.uploadService.uploadImage(image, 'news');
-      newsData.image = addDomainToUrl(imagePath, this.host);
+      const imagePath = await this.uploadService.uploadImage(image, 'news');
+      newsData.image = await addDomainToUrl(imagePath, this.host);
     }
     return this.newsService.create(newsData);
   }
@@ -53,8 +53,8 @@ export class NewsController {
     @Body() newsData: Partial<News>,
   ): Promise<News> {
     if (image) {
-      const imagePath = this.uploadService.uploadImage(image, 'news');
-      newsData.image = addDomainToUrl(imagePath, this.host);
+      const imagePath = await this.uploadService.uploadImage(image, 'news');
+      newsData.image = await addDomainToUrl(imagePath, this.host);
     }
     const updated = await this.newsService.update(id, newsData);
     if (!updated) {

@@ -27,6 +27,9 @@ import { PublicModule } from './public/public.module';
 import { ContactController } from './contact/contact.controller';
 import { ContactModule } from './contact/contact.module';
 import { DiscountModule } from './discount/discount.module';
+import { AboutController } from './about/about.controller';
+import { AboutService } from './about/about.service';
+import { AboutModule } from './about/about.module';
 
 @Module({
   imports: [
@@ -67,6 +70,7 @@ import { DiscountModule } from './discount/discount.module';
     DashboardModule,
     PublicModule,
     ContactModule,
+    AboutModule,
   ],
   controllers: [AppController, ProductController, UserController, ContactController],
   providers: [AppService, ProductService, UserController],
