@@ -1,5 +1,5 @@
 #! /bin/bash
-OLD_CONTAINER="$(docker ps --all --quiet --filter=name="DOCKER_CONTAINER_NAME")"
+OLD_CONTAINER="$(docker ps --all --quiet --filter=name="$DOCKER_CONTAINER_NAME")"
 
 if [ -n "$OLD_CONTAINER" ]; then
     if docker inspect -f '{{.State.Running}}' "$OLD_CONTAINER" 2>/dev/null; then
