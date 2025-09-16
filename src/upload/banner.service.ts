@@ -24,7 +24,7 @@ export class BannerService {
       const uniqueName = `${baseName}_${Date.now()}${ext}`;
       const filePath = path.join(this.bannerDir, uniqueName);
       await fs.writeFile(filePath, file.buffer);
-      return `/api/uploads/banner/${uniqueName}`;
+      return `/uploads/banner/${uniqueName}`;
     } catch (error) {
       throw new InternalServerErrorException('Failed to save banner');
     }
@@ -48,7 +48,7 @@ export class BannerService {
         const uniqueName = `${baseName}_${Date.now()}${Math.floor(Math.random()*10000)}${ext}`;
         const filePath = path.join(this.voucherDir, uniqueName);
         await fs.writeFile(filePath, file.buffer);
-        urls.push(`/api/uploads/voucher/${uniqueName}`);
+        urls.push(`/uploads/voucher/${uniqueName}`);
       }
       return urls;
     } catch (error) {
@@ -70,7 +70,7 @@ export class BannerService {
     try {
       await fs.mkdir(this.voucherDir, { recursive: true });
       const files = await fs.readdir(this.voucherDir);
-      return files.map(file => `/api/uploads/voucher/${file}`);
+      return files.map(file => `/uploads/voucher/${file}`);
     } catch (error) {
       throw new InternalServerErrorException('Failed to list voucher images');
     }
@@ -94,7 +94,7 @@ export class BannerService {
         const uniqueName = `${baseName}_${Date.now()}${Math.floor(Math.random()*10000)}${ext}`;
         const filePath = path.join(this.featuredDir, uniqueName);
         await fs.writeFile(filePath, file.buffer);
-        urls.push(`/api/uploads/featured/${uniqueName}`);
+        urls.push(`/uploads/featured/${uniqueName}`);
       }
       return urls;
     } catch (error) {
@@ -106,7 +106,7 @@ export class BannerService {
     try {
       await fs.mkdir(this.featuredDir, { recursive: true });
       const files = await fs.readdir(this.featuredDir);
-      return files.map(file => `/api/uploads/featured/${file}`);
+      return files.map(file => `/uploads/featured/${file}`);
     } catch (error) {
       throw new InternalServerErrorException('Failed to list featured images');
     }
