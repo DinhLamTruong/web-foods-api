@@ -68,7 +68,7 @@ export class BannerService {
     try {
       await fs.mkdir(this.bannerDir, { recursive: true });
       const files = await fs.readdir(this.bannerDir);
-      return files.map(file => `/api/uploads/banner/${file}`);
+      return files.map(file => `/uploads/banner/${file}`);
     } catch (error) {
       throw new InternalServerErrorException('Failed to list banner images');
     }
