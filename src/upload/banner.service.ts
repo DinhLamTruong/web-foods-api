@@ -54,4 +54,24 @@ export class BannerService {
       throw new InternalServerErrorException('Failed to save voucher images');
     }
   }
+
+  async listBannerImages(): Promise<string[]> {
+    try {
+      await fs.mkdir(this.bannerDir, { recursive: true });
+      const files = await fs.readdir(this.bannerDir);
+      return files.map(file => `/uploads/banner/${file}`);
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to list banner images');
+    }
+  }
+
+  async listVoucherImages(): Promise<string[]> {
+    try {
+      await fs.mkdir(this.voucherDir, { recursive: true });
+      const files = await fs.readdir(this.voucherDir);
+      return files.map(file => `/uploads/voucher/${file}`);
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to list voucher images');
+    }
+  }
 }

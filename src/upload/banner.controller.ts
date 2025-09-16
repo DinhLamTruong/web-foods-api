@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   UploadedFile,
   UploadedFiles,
   UseInterceptors,
@@ -30,6 +31,18 @@ export class BannerController {
       throw new BadRequestException('Please upload exactly 3 voucher images');
     }
     const urls = await this.bannerService.saveVouchers(files);
+    return { urls };
+  }
+
+  @Get('banner')
+  async getBannerImages() {
+    const urls = await this.bannerService.listBannerImages();
+    return { urls };
+  }
+
+  @Get('voucher')
+  async getVoucherImages() {
+    const urls = await this.bannerService.listVoucherImages();
     return { urls };
   }
 }
