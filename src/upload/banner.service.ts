@@ -6,6 +6,7 @@ import * as path from 'path';
 export class BannerService {
   private readonly bannerDir = path.join(process.cwd(), 'uploads', 'banner');
   private readonly voucherDir = path.join(process.cwd(), 'uploads', 'voucher');
+  private readonly featuredDir = path.join(process.cwd(), 'uploads', 'featured');
 
   async saveBanner(file: Express.Multer.File): Promise<string> {
     try {
@@ -72,6 +73,42 @@ export class BannerService {
       return files.map(file => `/uploads/voucher/${file}`);
     } catch (error) {
       throw new InternalServerErrorException('Failed to list voucher images');
+    }
+  }
+
+  async saveFeatured(files: Express.Multer.File[]): Promise<string[]> {
+    try {
+      await fs.mkdir(this.featuredDir, { recursive: true });
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      const maxSize = 5 * 1024 * 1024;
+      const urls: string[] = [];
+      for (const file of files) {
+        if (!allowedTypes.includes(file.mimetype)) {
+          throw new InternalServerErrorException('Invalid file type');
+        }
+        if (file.size > maxSize) {
+          throw new InternalServerErrorException('File too large');
+        }
+        const ext = path.extname(file.originalname);
+        const baseName = path.basename(file.originalname, ext);
+        const uniqueName = `${baseName}_${Date.now()}${Math.floor(Math.random()*10000)}${ext}`;
+        const filePath = path.join(this.featuredDir, uniqueName);
+        await fs.writeFile(filePath, file.buffer);
+        urls.push(`/uploads/featured/${uniqueName}`);
+      }
+      return urls;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to save featured images');
+    }
+  }
+
+  async listFeaturedImages(): Promise<string[]> {
+    try {
+      await fs.mkdir(this.featuredDir, { recursive: true });
+      const files = await fs.readdir(this.featuredDir);
+      return files.map(file => `/uploads/featured/${file}`);
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to list featured images');
     }
   }
 }

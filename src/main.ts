@@ -18,6 +18,8 @@ async function bootstrap() {
     'http://localhost:5173',
     'http://192.168.1.46:5173',
     'http://192.168.41.160:8080',
+    'http://sukimoko-admin.ncs.int',
+    'http://sukimoko.ncs.int',
   ].filter((origin) => !!origin)
 
   // Enable CORS with custom configuration
