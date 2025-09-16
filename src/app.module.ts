@@ -35,7 +35,7 @@ import { AboutModule } from './about/about.module';
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
-      serveRoot: '/uploads',
+      serveRoot: '/api/uploads',
     }),
     ConfigModule.forRoot({
       isGlobal: true,
