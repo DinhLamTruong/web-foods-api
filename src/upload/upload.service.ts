@@ -29,7 +29,7 @@ export class UploadService {
       const filePath = path.join(this.uploadDir, uniqueName);
       await fs.writeFile(filePath, file.buffer);
       // Return the relative URL path for the uploaded file
-      return `/uploads/about/${uniqueName}`;
+      return `/api/uploads/about/${uniqueName}`;
     } catch (error) {
       throw new InternalServerErrorException('Failed to save file');
     }
