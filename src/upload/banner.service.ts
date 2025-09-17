@@ -46,9 +46,11 @@ export class BannerService {
       const urls: string[] = [];
       for (const file of files) {
         if (!allowedTypes.includes(file.mimetype)) {
+          console.error('Invalid file type:', file.mimetype);
           throw new InternalServerErrorException('Invalid file type');
         }
         if (file.size > maxSize) {
+          console.error('File too large:', file.size);
           throw new InternalServerErrorException('File too large');
         }
         const ext = path.extname(file.originalname);
