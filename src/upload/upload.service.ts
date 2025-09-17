@@ -36,8 +36,33 @@ export class UploadService {
   }
 
   async uploadImage(file: Express.Multer.File, folder: string): Promise<string> {
-    // For compatibility with existing code, ignoring folder param and calling saveFile
-    return this.saveFile(file);
+    try {
+      // Validate file type (only allow images)
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.mimetype)) {
+        throw new InternalServerErrorException('Invalid file type');
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        throw new InternalServerErrorException('File too large');
+      }
+
+      const uploadDir = path.join(process.cwd(), 'uploads', folder);
+      await fs.mkdir(uploadDir, { recursive: true });
+
+      // Rename file to avoid duplicate (add timestamp)
+      const ext = path.extname(file.originalname);
+      const baseName = path.basename(file.originalname, ext);
+      const uniqueName = `${baseName}_${Date.now()}${ext}`;
+      const filePath = path.join(uploadDir, uniqueName);
+      await fs.writeFile(filePath, file.buffer);
+      // Return the relative URL path for the uploaded file
+      return `/api/uploads/${folder}/${uniqueName}`;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to save file');
+    }
   }
 
   async deleteFile(fileName: string): Promise<void> {
