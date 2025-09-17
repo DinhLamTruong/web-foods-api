@@ -56,10 +56,11 @@ export class BannerService {
         const uniqueName = `${baseName}_${Date.now()}${Math.floor(Math.random()*10000)}${ext}`;
         const filePath = path.join(this.voucherDir, uniqueName);
         await fs.writeFile(filePath, file.buffer);
-        urls.push(`/uploads/voucher/${uniqueName}`);
+        urls.push(`/api/uploads/voucher/${uniqueName}`);
       }
       return urls;
     } catch (error) {
+      console.error('Error saving voucher images:', error);
       throw new InternalServerErrorException('Failed to save voucher images');
     }
   }
