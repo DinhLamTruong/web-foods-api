@@ -1,7 +1,7 @@
 export default () => ({
   app: {
     host: process.env.APP_HOST,
-    port: process.env.APP_PORT || 3000,
+    port: process.env.APP_PORT || 3001,
     origin01: process.env.APP_ORIGIN_01,
     origin02: process.env.APP_ORIGIN_02,
     apiKey: process.env.SENDGRID_KEY,

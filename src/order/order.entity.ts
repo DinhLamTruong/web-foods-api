@@ -6,7 +6,7 @@ export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ default: '' })
+  @Column({ type: 'varchar', length: 255, nullable: true, default: null })
   email: string;
 
   @Column({ default: '' })
@@ -22,15 +22,15 @@ export class Order {
   agreeTerms: boolean;
 
   @Column({ nullable: true, type: 'text' })
-  discountCode: string; // will store multiple discount codes as comma-separated string
+  discountCode: string;
 
-  @Column({ default: '' })
+  @Column({ type: 'varchar', length: 255, nullable: true, default: null })
   district: string;
 
-  @Column({ default: '' })
+  @Column({ type: 'varchar', length: 255, nullable: true, default: null })
   province: string;
 
-  @Column({ default: '' })
+  @Column({ type: 'varchar', length: 255, nullable: true, default: null })
   ward: string;
 
   @Column({ default: '' })
@@ -42,7 +42,7 @@ export class Order {
   @Column({ default: '' })
   shippingMethod: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   note: string;
 
   @Column({ default: 'pending' })
@@ -50,6 +50,15 @@ export class Order {
 
   @Column('decimal', { precision: 10, scale: 0, default: 0 })
   totalPrice: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  timestamp: string;
+
+  @Column({ default: 0 })
+  totalItems: number;
+
+  @Column({ default: 0 })
+  totalQuantity: number;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -74,12 +83,6 @@ export class OrderItem {
 
   @Column()
   quantity: number;
-
-  // @Column()
-  // title: string;
-
-  // @Column({ default: '' })
-  // unit: string;
 
   @ManyToOne(() => Order, order => order.items, { onDelete: 'CASCADE' })
   order: Order;

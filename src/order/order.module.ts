@@ -5,9 +5,10 @@ import { OrderController } from './order.controller';
 import { Order, OrderItem } from './order.entity';
 import { Product } from '../product/product.entity';
 import { DiscountModule } from '../discount/discount.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, OrderItem, Product]), DiscountModule],
+  imports: [TypeOrmModule.forFeature([Order, OrderItem, Product]), DiscountModule, EmailModule],
   controllers: [OrderController],
   providers: [OrderService],
   exports: [OrderService],

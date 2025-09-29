@@ -1,125 +1,117 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { promises as fs } from 'fs';
-import * as path from 'path';
+import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common'
+import { Express } from 'express'
+import * as fs from 'fs/promises'
+import * as path from 'path'
 
 @Injectable()
 export class BannerService {
-  private readonly bannerDir = path.join(process.cwd(), 'uploads', 'banner');
-  private readonly voucherDir = path.join(process.cwd(), 'uploads', 'voucher');
-  private readonly featuredDir = path.join(process.cwd(), 'uploads', 'featured');
+  private bannerDir = path.join(process.cwd(), 'uploads', 'banner')
+  private featuredDir = path.join(process.cwd(), 'uploads', 'featured')
+  private allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  private maxSize = 10 * 1024 * 1024
 
-  async saveBanner(file: Express.Multer.File): Promise<string> {
-    try {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      if (!allowedTypes.includes(file.mimetype)) {
-        throw new InternalServerErrorException('Invalid file type');
-      }
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        throw new InternalServerErrorException('File too large');
-      }
-      await fs.mkdir(this.bannerDir, { recursive: true });
-
-      // Delete existing banner images to overwrite
-      const existingFiles = await fs.readdir(this.bannerDir);
-      for (const existingFile of existingFiles) {
-        const existingFilePath = path.join(this.bannerDir, existingFile);
-        await fs.unlink(existingFilePath);
-      }
-
-      const ext = path.extname(file.originalname);
-      const baseName = path.basename(file.originalname, ext);
-      const uniqueName = `${baseName}_${Date.now()}${ext}`;
-      const filePath = path.join(this.bannerDir, uniqueName);
-      await fs.writeFile(filePath, file.buffer);
-      return `/uploads/banner/${uniqueName}`;
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to save banner');
+  private validateFile(file: Express.Multer.File) {
+    if (!this.allowedTypes.includes(file.mimetype)) {
+      throw new BadRequestException(`Invalid file type: ${file.mimetype}`)
+    }
+    if (file.size > this.maxSize) {
+      throw new BadRequestException(`File too large: ${file.originalname}`)
     }
   }
 
-  async saveVouchers(files: Express.Multer.File[]): Promise<string[]> {
+  async saveBanner(file: Express.Multer.File) {
     try {
-      await fs.mkdir(this.voucherDir, { recursive: true });
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      const maxSize = 5 * 1024 * 1024;
-      const urls: string[] = [];
+      this.validateFile(file)
+      await fs.mkdir(this.bannerDir, { recursive: true })
+
+      const ext = path.extname(file.originalname)
+      const uniqueName = `${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`
+      const filePath = path.join(this.bannerDir, uniqueName)
+
+      await fs.writeFile(filePath, file.buffer!)
+      return `/api/uploads/banner/${uniqueName}`
+    } catch (error) {
+      throw new InternalServerErrorException(`Failed to save banner: ${error.message}`)
+    }
+  }
+
+  async saveBanners(files: Express.Multer.File[]) {
+    try {
+      await fs.mkdir(this.bannerDir, { recursive: true })
+      let existingFiles = await fs.readdir(this.bannerDir)
+      console.log(`Found ${existingFiles.length} existing banner files to delete.`)
+      for (const fileName of existingFiles) {
+        const filePath = path.join(this.bannerDir, fileName)
+        try {
+          await fs.unlink(filePath)
+          console.log(`Deleted existing file: ${fileName}`)
+        } catch (deleteError) {
+          console.error(`Failed to delete ${fileName}:`, deleteError)
+          throw new InternalServerErrorException(`Failed to delete old banner: ${fileName}`)
+        }
+      }
+      existingFiles = await fs.readdir(this.bannerDir)
+      if (existingFiles.length > 0) {
+        console.error('Directory not empty after deletion attempt:', existingFiles)
+        throw new InternalServerErrorException('Failed to clear old banners')
+      }
+      console.log('Banner directory cleared successfully.')
+      const urls: string[] = []
       for (const file of files) {
-        if (!allowedTypes.includes(file.mimetype)) {
-          console.error('Invalid file type:', file.mimetype);
-          throw new InternalServerErrorException('Invalid file type');
-        }
-        if (file.size > maxSize) {
-          console.error('File too large:', file.size);
-          throw new InternalServerErrorException('File too large');
-        }
-        const ext = path.extname(file.originalname);
-        const baseName = path.basename(file.originalname, ext);
-        const uniqueName = `${baseName}_${Date.now()}${Math.floor(Math.random()*10000)}${ext}`;
-        const filePath = path.join(this.voucherDir, uniqueName);
-        await fs.writeFile(filePath, file.buffer);
-        urls.push(`/api/uploads/voucher/${uniqueName}`);
+        this.validateFile(file)
+        const ext = path.extname(file.originalname)
+        const baseName = path.basename(file.originalname, ext)
+        const uniqueName = `${baseName}_${Date.now()}${Math.floor(Math.random() * 10000)}${ext}`
+        const filePath = path.join(this.bannerDir, uniqueName)
+        await fs.writeFile(filePath, file.buffer)
+        urls.push(`/api/uploads/banner/${uniqueName}`)
+        console.log(`Saved new banner: ${uniqueName}`)
       }
-      return urls;
+      return urls
     } catch (error) {
-      console.error('Error saving voucher images:', error);
-      throw new InternalServerErrorException('Failed to save voucher images');
+      console.error('Error saving banner images:', error)
+      throw new InternalServerErrorException('Failed to save banner images')
     }
   }
 
-  async listBannerImages(): Promise<string[]> {
+  async listBannerImages() {
     try {
-      await fs.mkdir(this.bannerDir, { recursive: true });
-      const files = await fs.readdir(this.bannerDir);
-      return files.map(file => `/uploads/banner/${file}`);
+      await fs.mkdir(this.bannerDir, { recursive: true })
+      const files = await fs.readdir(this.bannerDir)
+      return files.map((file) => `/api/uploads/banner/${file}`)
     } catch (error) {
-      throw new InternalServerErrorException('Failed to list banner images');
+      throw new InternalServerErrorException(`Failed to list banner images: ${error.message}`)
     }
   }
 
-  async listVoucherImages(): Promise<string[]> {
+  async saveFeatured(files: Express.Multer.File[]) {
     try {
-      await fs.mkdir(this.voucherDir, { recursive: true });
-      const files = await fs.readdir(this.voucherDir);
-      return files.map(file => `/uploads/voucher/${file}`);
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to list voucher images');
-    }
-  }
+      await fs.mkdir(this.featuredDir, { recursive: true })
+      const urls: string[] = []
 
-  async saveFeatured(files: Express.Multer.File[]): Promise<string[]> {
-    try {
-      await fs.mkdir(this.featuredDir, { recursive: true });
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      const maxSize = 5 * 1024 * 1024;
-      const urls: string[] = [];
       for (const file of files) {
-        if (!allowedTypes.includes(file.mimetype)) {
-          throw new InternalServerErrorException('Invalid file type');
-        }
-        if (file.size > maxSize) {
-          throw new InternalServerErrorException('File too large');
-        }
-        const ext = path.extname(file.originalname);
-        const baseName = path.basename(file.originalname, ext);
-        const uniqueName = `${baseName}_${Date.now()}${Math.floor(Math.random()*10000)}${ext}`;
-        const filePath = path.join(this.featuredDir, uniqueName);
-        await fs.writeFile(filePath, file.buffer);
-        urls.push(`/uploads/featured/${uniqueName}`);
+        this.validateFile(file)
+
+        const ext = path.extname(file.originalname)
+        const uniqueName = `${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`
+        const filePath = path.join(this.featuredDir, uniqueName)
+
+        await fs.writeFile(filePath, file.buffer!)
+        urls.push(`/api/uploads/featured/${uniqueName}`)
       }
-      return urls;
+      return urls
     } catch (error) {
-      throw new InternalServerErrorException('Failed to save featured images');
+      throw new InternalServerErrorException(`Failed to save featured images: ${error.message}`)
     }
   }
 
-  async listFeaturedImages(): Promise<string[]> {
+  async listFeaturedImages() {
     try {
-      await fs.mkdir(this.featuredDir, { recursive: true });
-      const files = await fs.readdir(this.featuredDir);
-      return files.map(file => `/uploads/featured/${file}`);
+      await fs.mkdir(this.featuredDir, { recursive: true })
+      const files = await fs.readdir(this.featuredDir)
+      return files.map((file) => `/api/uploads/featured/${file}`)
     } catch (error) {
-      throw new InternalServerErrorException('Failed to list featured images');
+      throw new InternalServerErrorException(`Failed to list featured images: ${error.message}`)
     }
   }
 }

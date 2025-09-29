@@ -8,6 +8,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+// import type { File } from 'multer';
 import { BannerService } from './banner.service';
 
 @Controller('upload')
@@ -15,7 +16,7 @@ export class BannerController {
   constructor(private readonly bannerService: BannerService) {}
 
   @Post('banner')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('images'))
   async uploadBanner(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No banner image uploaded');
@@ -24,15 +25,15 @@ export class BannerController {
     return { url };
   }
 
-  @Post('voucher')
-  @UseInterceptors(FilesInterceptor('images', 3))
-  async uploadVoucher(@UploadedFiles() files: Express.Multer.File[]) {
-    if (!files || files.length !== 3) {
-      throw new BadRequestException('Please upload exactly 3 voucher images');
-    }
-    const urls = await this.bannerService.saveVouchers(files);
-    return { urls };
-  }
+  // @Post('voucher')
+  // @UseInterceptors(FilesInterceptor('images', 3))
+  // async uploadVoucher(@UploadedFiles() files: Express.Multer.File[]) {
+  //   if (!files || files.length !== 3) {
+  //     throw new BadRequestException('Please upload exactly 3 voucher images');
+  //   }
+  //   const urls = await this.bannerService.saveVouchers(files);
+  //   return { urls };
+  // }
 
   @Get('banner')
   async getBannerImages() {
@@ -40,9 +41,19 @@ export class BannerController {
     return { urls };
   }
 
-  @Get('voucher')
-  async getVoucherImages() {
-    const urls = await this.bannerService.listVoucherImages();
+  @Post('banners')
+  @UseInterceptors(FilesInterceptor('images'))
+  async uploadBanners(@UploadedFiles() files: Express.Multer.File[]) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No banner images uploaded');
+    }
+    const urls = await this.bannerService.saveBanners(files);
     return { urls };
   }
+
+  // @Get('voucher')
+  // async getVoucherImages() {
+  //   const urls = await this.bannerService.listVoucherImages();
+  //   return { urls };
+  // }
 }

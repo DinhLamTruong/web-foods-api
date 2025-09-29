@@ -1,15 +1,15 @@
-import { NestFactory } from '@nestjs/core'
-import { AppModule } from './app.module'
-import { ConfigService } from '@nestjs/config'
-import * as bodyParser from 'body-parser'
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule);
 
-  const configService = app.get(ConfigService)
-  const port = configService.get<number>('app.port') ?? 3001
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('app.port') ?? 3001;
 
-  app.setGlobalPrefix('api')
+  app.setGlobalPrefix('api');
 
   const allowedOrigins = [
     configService.get<string>('app.origin01'),
@@ -20,7 +20,7 @@ async function bootstrap() {
     'http://192.168.41.160:8080',
     'http://sukimoko-admin.ncs.int',
     'http://sukimoko.ncs.int',
-  ].filter((origin) => !!origin)
+  ].filter((origin) => !!origin);
 
   // Enable CORS with custom configuration
   app.enableCors({
@@ -28,12 +28,14 @@ async function bootstrap() {
     methods: 'GET,POST,PUT,PATCH,DELETE', // Allow only specific methods
     allowedHeaders: 'Content-Type, Authorization', // Allow specific headers
     credentials: true, // Allow sending credentials like cookies
-  })
+  });
 
   // Increase body size limit to 10mb
-  app.use(bodyParser.json({ limit: '10mb' }))
-  app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
+  app.use(bodyParser.json({ limit: '10mb' }));
+  app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
-  await app.listen(port)
+  await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
 }
-bootstrap()
+
+bootstrap();

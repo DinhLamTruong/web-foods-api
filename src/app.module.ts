@@ -30,6 +30,9 @@ import { DiscountModule } from './discount/discount.module';
 import { AboutController } from './about/about.controller';
 import { AboutService } from './about/about.service';
 import { AboutModule } from './about/about.module';
+// import { EmailController } from './email/email.controller';
+import { EmailService } from './email/email.service';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -71,8 +74,9 @@ import { AboutModule } from './about/about.module';
     PublicModule,
     ContactModule,
     AboutModule,
+    EmailModule,
   ],
   controllers: [AppController, ProductController, UserController, ContactController],
-  providers: [AppService, ProductService, UserController],
+  providers: [AppService, ProductService, UserController, EmailService],
 })
 export class AppModule {}

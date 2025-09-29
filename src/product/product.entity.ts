@@ -14,13 +14,16 @@ export class Product {
   description?: string
 
   @Column({type: 'text', nullable: true})
-  categoryType: string
+  categoryType?: string
 
   @Column({default: 0})
   quantity: number
 
   @Column({type: 'decimal', precision: 10, scale: 0})
   price: number
+
+  @Column({ type: 'decimal', precision: 10, scale: 0, nullable: true })
+  discounted?: number
 
   @Column({name: 'image_url', nullable: true})
   imageUrl?: string
@@ -33,6 +36,24 @@ export class Product {
 
   @OneToMany(() => ProductDiscount, (productDiscount) => productDiscount.product)
   productDiscounts: ProductDiscount[]
+
+  @Column({ type: 'json', nullable: true })
+  highlights?: any[]
+
+  @Column({ type: 'json', nullable: true })
+  shipping?: any
+
+  @Column({ type: 'json', nullable: true })
+  variantsItems?: any[]
+
+  @Column({ type: 'json', nullable: true })
+  options?: any[]
+
+  @Column({ type: 'json', nullable: true })
+  tags?: any[]
+
+  @Column({ type: 'json', nullable: true })
+  gifts?: any[]
 
   @CreateDateColumn({name: 'created_at', default: null})
   createdAt: Date
